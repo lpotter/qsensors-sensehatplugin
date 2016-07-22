@@ -12,18 +12,13 @@ SenseHatCompass::SenseHatCompass(QSensor *sensor)
     sensorFlag = SenseHatSensorBase::Compass;
     setReading<QCompassReading>(&m_reading);
     qDebug() << Q_FUNC_INFO;
-
+    connect(this,SIGNAL(compassChanged(QCompassReading)),this,SLOT(compassChanged(QCompassReading)));
 }
 
-SenseHatCompass::~SenseHatCompass()
+
+void SenseHatCompass::compassChanged(const QCompassReading &value)
 {
-    qDebug() << Q_FUNC_INFO;
-
+    m_reading.setAzimuth(value.azimuth());
+    m_reading.setTimestamp(value.timestamp());
+    newReadingAvailable();
 }
-
-//void SenseHatCompass::compassChanged(const QCompassReading &value)
-//{
-//    m_reading.setAzimuth(value.azimuth());
-//    m_reading.setTimestamp(value.timestamp());
-//    newReadingAvailable();
-//}

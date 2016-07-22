@@ -38,6 +38,11 @@
 ****************************************************************************/
 
 #include "sensehatcompass.h"
+#include "sensehataccelerometer.h"
+#include "sensehatgyroscope.h"
+#include "sensehatpressuresensor.h"
+#include "sensehattemperaturesensor.h"
+#include "sensehatmagnetometer.h"
 
 #include <qsensorplugin.h>
 #include <qsensorbackend.h>
@@ -51,25 +56,50 @@ class QSenseHatSensorPlugin : public QObject, public QSensorPluginInterface, pub
     Q_OBJECT
     Q_PLUGIN_METADATA(IID "com.qt-project.Qt.QSensorPluginInterface/1.0" FILE "plugin.json")
     Q_INTERFACES(QSensorPluginInterface)
+
 public:
     void registerSensors()
     {
-        //        if (!QSensorManager::isBackendRegistered(QOrientationSensor::type, IIOSensorProxyOrientationSensor::id))
-        //            QSensorManager::registerBackend(QOrientationSensor::type, IIOSensorProxyOrientationSensor::id, this);
-        //        if (!QSensorManager::isBackendRegistered(QLightSensor::type, IIOSensorProxyLightSensor::id))
-        //            QSensorManager::registerBackend(QLightSensor::type, IIOSensorProxyLightSensor::id, this);
         if (!QSensorManager::isBackendRegistered(QCompass::type, SenseHatCompass::id))
             QSensorManager::registerBackend(QCompass::type, SenseHatCompass::id, this);
+
+        if (!QSensorManager::isBackendRegistered(QAccelerometer::type, SenseHatAccelerometer::id))
+            QSensorManager::registerBackend(QAccelerometer::type, SenseHatAccelerometer::id, this);
+
+        if (!QSensorManager::isBackendRegistered(QGyroscope::type, SenseHatGyroscope::id))
+            QSensorManager::registerBackend(QGyroscope::type, SenseHatGyroscope::id, this);
+
+        if (!QSensorManager::isBackendRegistered(QPressureSensor::type, SenseHatPressureSensor::id))
+            QSensorManager::registerBackend(QPressureSensor::type, SenseHatPressureSensor::id, this);
+
+        if (!QSensorManager::isBackendRegistered(QAmbientTemperatureSensor::type, SenseHatTemperatureSensor::id))
+            QSensorManager::registerBackend(QAmbientTemperatureSensor::type, SenseHatTemperatureSensor::id, this);
+
+        if (!QSensorManager::isBackendRegistered(QMagnetometer::type, SenseHatMagnetometer::id))
+            QSensorManager::registerBackend(QMagnetometer::type, SenseHatMagnetometer::id, this);
+
     }
 
     QSensorBackend *createBackend(QSensor *sensor)
     {
-        //        if (sensor->identifier() == IIOSensorProxyOrientationSensor::id)
-        //            return new IIOSensorProxyOrientationSensor(sensor);
-        //        else if (sensor->identifier() == IIOSensorProxyLightSensor::id)
-        //            return new IIOSensorProxyLightSensor(sensor);
+
         if (sensor->identifier() == SenseHatCompass::id)
             return new SenseHatCompass(sensor);
+
+        if (sensor->identifier() == SenseHatAccelerometer::id)
+            return new SenseHatAccelerometer(sensor);
+
+        if (sensor->identifier() == SenseHatGyroscope::id)
+            return new SenseHatGyroscope(sensor);
+
+        if (sensor->identifier() == SenseHatPressureSensor::id)
+            return new SenseHatPressureSensor(sensor);
+
+        if (sensor->identifier() == SenseHatTemperatureSensor::id)
+            return new SenseHatTemperatureSensor(sensor);
+
+        if (sensor->identifier() == SenseHatMagnetometer::id)
+            return new SenseHatMagnetometer(sensor);
 
         return Q_NULLPTR;
     }

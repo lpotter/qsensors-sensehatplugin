@@ -6,6 +6,9 @@
 #include <QGyroscopeReading>
 #include <QAccelerometerReading>
 #include <QOrientationReading>
+#include <QMagnetometerReading>
+#include <QRotationReading>
+#include <QAmbientTemperatureReading>
 
 class QSenseHatSensorsPrivate
 {
@@ -28,12 +31,15 @@ public:
 
 
     qreal humidity = 0;
-    qreal pressure = 0;
-    qreal temperature = 0;
+    QPressureReading pressure;
+    QAmbientTemperatureReading temperature;
     QGyroscopeReading gyro;
     QAccelerometerReading acceleration;
     QCompassReading compass;
     QOrientationReading orientation;
+    QMagnetometerReading mag;
+    QRotationReading rotation;
+    QAmbientTemperatureReading temp;
 
     void open();
     void update(SenseHatSensorBase::UpdateFlags what);

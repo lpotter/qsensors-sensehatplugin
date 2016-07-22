@@ -10,11 +10,10 @@ class SenseHatCompass : public SenseHatSensorBase
     Q_OBJECT
 public:
     SenseHatCompass(QSensor *sensor);
-    ~SenseHatCompass();
     static char const * const id;
 
 private slots:
- //   void compassChanged(const QCompassReading &value);
+    void compassChanged(const QCompassReading &value);
 private:
     QCompassReading m_reading;
 

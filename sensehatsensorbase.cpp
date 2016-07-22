@@ -6,10 +6,11 @@
 
 #include <RTIMULib.h>
 #include <unistd.h>
-#include <QLoggingCategory>
+#define RADIANS_TO_DEGREES 57.2957795
 
-Q_DECLARE_LOGGING_CATEGORY(qSenseHat)
+
 static const int MAX_READ_ATTEMPTS = 5;
+//Q_LOGGING_CATEGORY(qSenseHat, "sensor.sensehat")
 
 QSenseHatSensorsPrivate::QSenseHatSensorsPrivate(SenseHatSensorBase *q_ptr)
     : q(q_ptr),
@@ -31,6 +32,8 @@ QSenseHatSensorsPrivate::~QSenseHatSensorsPrivate()
 
 void QSenseHatSensorsPrivate::open()
 {
+    qDebug() << Q_FUNC_INFO;
+
  //   CLocale c; // to avoid decimal separator trouble in the ini file
     const QString configFileName = QStringLiteral("RTIMULib.ini");
     const QString defaultConfig = QStringLiteral("/etc/") + configFileName;
@@ -56,18 +59,18 @@ void QSenseHatSensorsPrivate::open()
 
     rtimu = RTIMU::createIMU(settings);
     pollInterval = qMax(1, rtimu->IMUGetPollInterval());
-    qCDebug(qSenseHat, "IMU name %s Recommended poll interval %d ms", rtimu->IMUName(), pollInterval);
+    qDebug() << "IMU name" <<   rtimu->IMUName() << "Recommended poll interval" << pollInterval << "ms";
 
     rthumidity = RTHumidity::createHumidity(settings);
-    qCDebug(qSenseHat, "Humidity sensor name %s", rthumidity->humidityName());
+    qDebug() << "Humidity sensor name" << rthumidity->humidityName();
 
     rtpressure = RTPressure::createPressure(settings);
-    qCDebug(qSenseHat, "Pressure sensor name %s", rtpressure->pressureName());
+   qDebug() <<  "Pressure sensor name" << rtpressure->pressureName();
 }
 
 void QSenseHatSensorsPrivate::update(SenseHatSensorBase::UpdateFlags what)
 {
-    qDebug() << Q_FUNC_INFO << what;
+//    qDebug() << Q_FUNC_INFO << what;
 
     int humFlags = SenseHatSensorBase::Humidity;
     if (temperatureFromHumidity)
@@ -102,7 +105,8 @@ void QSenseHatSensorsPrivate::update(SenseHatSensorBase::UpdateFlags what)
     }
 
     const int imuFlags = SenseHatSensorBase::Gyro | SenseHatSensorBase::Acceleration
-            | SenseHatSensorBase::Compass | SenseHatSensorBase::Orientation;
+            | SenseHatSensorBase::Compass | SenseHatSensorBase::Orientation
+            | SenseHatSensorBase::Magnetometer | SenseHatSensorBase::Rotation;
     if (what & imuFlags) {
         if (!imuInited) {
             imuInited = true;
@@ -123,30 +127,40 @@ void QSenseHatSensorsPrivate::update(SenseHatSensorBase::UpdateFlags what)
 
 }
 
+static inline qreal toDeg360(qreal rad)
+{
+    const qreal deg = rad * RADIANS_TO_DEGREES;
+    return deg < 0 ? deg + 360 : deg;
+}
+
 void QSenseHatSensorsPrivate::report(const RTIMU_DATA &data, SenseHatSensorBase::UpdateFlags what)
 {
-    qDebug() << Q_FUNC_INFO << what;
+    //qDebug() << Q_FUNC_INFO << what;
 
-    if (what.testFlag(SenseHatSensorBase::Humidity)) {
-        if (data.humidityValid) {
-            humidity = data.humidity;
-            emit q->humidityChanged(humidity);
-            q->newReadingAvailable();
-        }
-    }
+//    if (what.testFlag(SenseHatSensorBase::Humidity)) {
+//        if (data.humidityValid) {
+//            humidity = data.humidity;
+//            emit q->humidityChanged(humidity);
+//        }
+//    }
 
     if (what.testFlag(SenseHatSensorBase::Pressure)) {
         if (data.pressureValid) {
-            pressure = data.pressure;
-            emit q->pressureChanged(pressure);
-            q->newReadingAvailable();        }
+            if (pressure.pressure() != (qreal)data.pressure) {
+                pressure.setTimestamp((quint64)data.timestamp);
+                pressure.setPressure((qreal)data.pressure);
+                emit q->pressureChanged(pressure);
+            }
+        }
     }
 
     if (what.testFlag(SenseHatSensorBase::Temperature)) {
         if (data.temperatureValid) {
-            temperature = data.temperature;
-            emit q->temperatureChanged(temperature);
-            q->newReadingAvailable();
+            if (temperature.temperature() != (qreal)data.temperature) {
+                temperature.setTemperature((qreal)data.temperature);
+                temperature.setTimestamp((quint64)data.timestamp);
+                emit q->temperatureChanged(temperature);
+            }
         }
     }
 
@@ -158,44 +172,48 @@ void QSenseHatSensorsPrivate::report(const RTIMU_DATA &data, SenseHatSensorBase:
             gyro.setZ((qreal)data.gyro.z());
 
             emit q->gyroChanged(gyro);
-            q->newReadingAvailable();
         }
     }
 
     if (what.testFlag(SenseHatSensorBase::Acceleration)) {
         if (data.accelValid) {
-            //  acceleration = QAccelerometerReading(data.timestamp, data.accel.x(), data.accel.y(), data.accel.z());
             acceleration.setTimestamp((quint64)data.timestamp);
             acceleration.setX((qreal)data.accel.x());
             acceleration.setY((qreal)data.accel.y());
             acceleration.setZ((qreal)data.accel.z());
             emit q->accelerationChanged(acceleration);
-            q->newReadingAvailable();
         }
     }
-
+    if (what.testFlag(SenseHatSensorBase::Rotation)) {
+        if (data.fusionPoseValid) {
+            rotation.setTimestamp((quint64)data.timestamp);
+            rotation.setFromEuler(toDeg360(data.fusionPose.x()),
+                                   toDeg360(data.fusionPose.y()),
+                                   toDeg360(data.fusionPose.z()));
+            emit q->rotationChanged(rotation);
+        }
+    }
+    // in rtimulib compass is magnetometer and azimuth comes from
+    // sensorfusion algo
     if (what.testFlag(SenseHatSensorBase::Compass)) {
-        if (data.compassValid) {
-            //   compass = QCompassReading(data.timestamp,data.compass.x(), data.compass.y(), data.compass.z());
+        if (data.fusionPoseValid) {
             compass.setTimestamp((quint64)data.timestamp);
-            compass.setAzimuth((qreal)data.compass.x());
-            //            compass.setY((qreal)data.compass.y());
-            //            compass.setZ((qreal)data.compass.z());
-            emit q->compassChanged(compass);
-            q->newReadingAvailable();
+            compass.setAzimuth(toDeg360(data.fusionPose.z()));
+                    emit q->compassChanged(compass);
             qDebug() << Q_FUNC_INFO << compass.azimuth();
         }
     }
 
-    // QSensors orientation is not the same as android
-    //    if (what.testFlag(SenseHatSensorBase::Orientation)) {
-    //        if (data.fusionPoseValid) {
-    //            orientation = QOrientationReading(data.timestamp, toDeg360(data.fusionPose.x()),  // roll
-    //                                    toDeg360(data.fusionPose.y()),  // pitch
-    //                                    toDeg360(data.fusionPose.z())); // yaw
-    //            emit q->orientationChanged(orientation);
-    //        }
-    //    }
+    if (what.testFlag(SenseHatSensorBase::Magnetometer)) {
+        if (data.compassValid) {
+            mag.setTimestamp((qreal)data.timestamp);
+            mag.setX((qreal)data.compass.x());
+            mag.setY((qreal)data.compass.y());
+            mag.setZ((qreal)data.compass.z());
+            emit q->magnetometerChanged(mag);
+        }
+
+    }
 }
 
 SenseHatSensorBase::SenseHatSensorBase(QSensor *sensor)
@@ -206,7 +224,10 @@ SenseHatSensorBase::SenseHatSensorBase(QSensor *sensor)
     d_ptr->open();
     d_ptr->pollTimer.setInterval(d_ptr->pollInterval);
     connect(&d_ptr->pollTimer, &QTimer::timeout, [this] { d_ptr->update(sensorFlag); });
+}
 
+SenseHatSensorBase::~SenseHatSensorBase()
+{
 }
 
 void SenseHatSensorBase::start()
@@ -219,6 +240,11 @@ void SenseHatSensorBase::stop()
 {
     qDebug() << Q_FUNC_INFO;
     d_ptr->pollTimer.stop();
+}
+
+bool SenseHatSensorBase::isFeatureSupported(QSensor::Feature /*feature*/) const
+{
+    return false;
 }
 
 void SenseHatSensorBase::poll(SenseHatSensorBase::UpdateFlags sensorFlag)
