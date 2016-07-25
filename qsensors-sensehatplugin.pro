@@ -1,5 +1,5 @@
 TEMPLATE = lib
-TARGET = qtsensors_sensehat
+TARGET = $$qtLibraryTarget(qtsensors_sensehat)
 QT = core sensors
 CONFIG += plugin debug
 
@@ -30,3 +30,8 @@ HEADERS += \
 
 PLUGIN_TYPE = sensors
 
+DESTDIR = $$PLUGIN_TYPE
+
+
+target.path = $$[QT_INSTALL_PLUGINS]/$$PLUGIN_TYPE
+INSTALLS += target
