@@ -35,3 +35,7 @@ DESTDIR = $$PLUGIN_TYPE
 
 target.path = $$[QT_INSTALL_PLUGINS]/$$PLUGIN_TYPE
 INSTALLS += target
+
+config.path=/etc/xdg/QtProject
+config.files= Sensors.conf
+INSTALLS += config
