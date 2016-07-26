@@ -8,7 +8,8 @@
 #include <RTIMULib.h>
 #include <unistd.h>
 #define RADIANS_TO_DEGREES 57.2957795
-
+#define STANDARD_GRAVITY 9.80665
+#define RADIANS_TO_DEGREES 57.2957795
 
 static const int MAX_READ_ATTEMPTS = 5;
 //Q_LOGGING_CATEGORY(qSenseHat, "sensor.sensehat")
@@ -152,14 +153,14 @@ void QSenseHatSensorsPrivate::report(const RTIMU_DATA &data, SenseHatSensorBase:
 
     if (what.testFlag(SenseHatSensorBase::Gyro)) {
         if (data.gyroValid) {
-            qDebug() << Q_FUNC_INFO
-                     << data.gyro.x()
-                     << data.gyro.y()
-                     << data.gyro.z();
+//            qDebug() << Q_FUNC_INFO
+//                     << data.gyro.x()
+//                     << data.gyro.y()
+//                     << data.gyro.z();
             gyro.setTimestamp((quint64)data.timestamp);
-            gyro.setX((qreal)data.gyro.x());
-            gyro.setY((qreal)data.gyro.y());
-            gyro.setZ((qreal)data.gyro.z());
+            gyro.setX((qreal)data.gyro.x() * RADIANS_TO_DEGREES);
+            gyro.setY((qreal)data.gyro.y() * RADIANS_TO_DEGREES);
+            gyro.setZ((qreal)data.gyro.z() * RADIANS_TO_DEGREES);
 
             emit q->gyroChanged(gyro);
         }
@@ -168,13 +169,13 @@ void QSenseHatSensorsPrivate::report(const RTIMU_DATA &data, SenseHatSensorBase:
     if (what.testFlag(SenseHatSensorBase::Acceleration)) {
         if (data.accelValid) {
             acceleration.setTimestamp((quint64)data.timestamp);
-            qDebug() << Q_FUNC_INFO
-                     << data.accel.x()
-                     << data.accel.y()
-                     << data.accel.z();
-            acceleration.setX((qreal)data.accel.x());
-            acceleration.setY((qreal)data.accel.y());
-            acceleration.setZ((qreal)data.accel.z());
+//            qDebug() << Q_FUNC_INFO
+//                     << data.accel.x()
+//                     << data.accel.y()
+//                     << data.accel.z();
+            acceleration.setX((qreal)data.accel.x() * STANDARD_GRAVITY);
+            acceleration.setY((qreal)data.accel.y() * STANDARD_GRAVITY);
+            acceleration.setZ((qreal)data.accel.z() * STANDARD_GRAVITY);
             emit q->accelerationChanged(acceleration);
         }
     }
@@ -205,9 +206,9 @@ void QSenseHatSensorsPrivate::report(const RTIMU_DATA &data, SenseHatSensorBase:
     if (what.testFlag(SenseHatSensorBase::Magnetometer)) {
         if (data.compassValid) {
             mag.setTimestamp((qreal)data.timestamp);
-            mag.setX((qreal)data.compass.x());
-            mag.setY((qreal)data.compass.y());
-            mag.setZ((qreal)data.compass.z());
+            mag.setX((qreal)data.compass.x() * 1000);
+            mag.setY((qreal)data.compass.y() * 1000);
+            mag.setZ((qreal)data.compass.z() * 1000);
             emit q->magnetometerChanged(mag);
         }
 

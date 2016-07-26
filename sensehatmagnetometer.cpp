@@ -10,7 +10,7 @@ SenseHatMagnetometer::SenseHatMagnetometer(QSensor *sensor)
     sensorFlag = SenseHatSensorBase::Magnetometer;
     setReading<QMagnetometerReading>(&m_reading);
     qDebug() << Q_FUNC_INFO;
-    connect(this,SIGNAL(magnetometerChanged(QCompassReading)),this,SLOT(magChanged(QCompassReading)));
+    connect(this,SIGNAL(magnetometerChanged(QMagnetometerReading)),this,SLOT(magChanged(QMagnetometerReading)));
 }
 
 
