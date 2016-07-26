@@ -41,7 +41,7 @@ void QSenseHatSensorsPrivate::open()
     if (!sensehatConfigDir.isEmpty())
         sensehatConfigDir = QString::fromLatin1("/etc/xdg");
 
-    settings = new RTIMUSettings(sensehatConfigDir, "RTIMULib");
+    settings = new RTIMUSettings(sensehatConfigDir.toLocal8Bit(), "RTIMULib");
 
     rtimu = RTIMU::createIMU(settings);
     pollInterval = qMax(1, rtimu->IMUGetPollInterval());
