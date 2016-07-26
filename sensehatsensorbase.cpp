@@ -35,27 +35,12 @@ void QSenseHatSensorsPrivate::open()
     qDebug() << Q_FUNC_INFO;
 
  //   CLocale c; // to avoid decimal separator trouble in the ini file
-    const QString configFileName = QStringLiteral("RTIMULib.ini");
-    const QString defaultConfig = QStringLiteral("/etc/") + configFileName;
-    const QString writableConfigDir = QStandardPaths::writableLocation(QStandardPaths::GenericConfigLocation)
-            + QStringLiteral("/sense_hat");
-    const QString writableConfig = writableConfigDir + QStringLiteral("/") + configFileName;
 
-//    if (!flags.testFlag(QSenseHatSensors::DontCopyIniFile)) {
-//        if (!QFile::exists(writableConfig)) {
-//            qCDebug(qSenseHat) << "Copying" << defaultConfig << "to" << writableConfig;
-//            if (QFile::exists(defaultConfig)) {
-//                QDir(QStringLiteral("/")).mkpath(writableConfigDir);
-//                QFile::copy(defaultConfig, writableConfig);
-//            } else {
-//                qWarning("/etc/RTIMULib.ini not found, sensors may not be functional");
-//            }
-//        }
-//        QByteArray dirName = writableConfigDir.toUtf8();
-//        settings = new RTIMUSettings(dirName.constData(), "RTIMULib");
-//    } else {
-        settings = new RTIMUSettings("/etc", "RTIMULib");
-   // }
+    QString sensehatConfigDir = QFile::decodeName(qgetenv("SENSEHAT_CONFIG_DIR"));
+    if (!sensehatConfigDir.isEmpty())
+        sensehatConfigDir = QString::fromLatin1("/etc/xdg");
+
+    settings = new RTIMUSettings(sensehatConfigDir, "RTIMULib");
 
     rtimu = RTIMU::createIMU(settings);
     pollInterval = qMax(1, rtimu->IMUGetPollInterval());
