@@ -152,6 +152,10 @@ void QSenseHatSensorsPrivate::report(const RTIMU_DATA &data, SenseHatSensorBase:
 
     if (what.testFlag(SenseHatSensorBase::Gyro)) {
         if (data.gyroValid) {
+            qDebug() << Q_FUNC_INFO
+                     << data.gyro.x()
+                     << data.gyro.y()
+                     << data.gyro.z();
             gyro.setTimestamp((quint64)data.timestamp);
             gyro.setX((qreal)data.gyro.x());
             gyro.setY((qreal)data.gyro.y());
@@ -164,6 +168,10 @@ void QSenseHatSensorsPrivate::report(const RTIMU_DATA &data, SenseHatSensorBase:
     if (what.testFlag(SenseHatSensorBase::Acceleration)) {
         if (data.accelValid) {
             acceleration.setTimestamp((quint64)data.timestamp);
+            qDebug() << Q_FUNC_INFO
+                     << data.accel.x()
+                     << data.accel.y()
+                     << data.accel.z();
             acceleration.setX((qreal)data.accel.x());
             acceleration.setY((qreal)data.accel.y());
             acceleration.setZ((qreal)data.accel.z());
@@ -173,6 +181,10 @@ void QSenseHatSensorsPrivate::report(const RTIMU_DATA &data, SenseHatSensorBase:
     if (what.testFlag(SenseHatSensorBase::Rotation)) {
         if (data.fusionPoseValid) {
             rotation.setTimestamp((quint64)data.timestamp);
+            qDebug() << Q_FUNC_INFO
+                     << data.fusionPose.x()
+                     << data.fusionPose.y()
+                     << data.fusionPose.z();
             rotation.setFromEuler(toDeg360(data.fusionPose.x()),
                                    toDeg360(data.fusionPose.y()),
                                    toDeg360(data.fusionPose.z()));
