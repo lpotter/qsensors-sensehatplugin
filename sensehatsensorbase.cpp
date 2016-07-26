@@ -206,13 +206,13 @@ void QSenseHatSensorsPrivate::report(const RTIMU_DATA &data, SenseHatSensorBase:
     if (what.testFlag(SenseHatSensorBase::Magnetometer)) {
         if (data.compassValid) {
             mag.setTimestamp((qreal)data.timestamp);
-            qDebug() << Q_FUNC_INFO
-                     << data.compass.x()
-                     << data.compass.y()
-                     << data.compass.z();
-            mag.setX((qreal)data.compass.x() * 0000001);
-            mag.setY((qreal)data.compass.y() * 0000001);
-            mag.setZ((qreal)data.compass.z() * 0000001);
+//            qDebug() << Q_FUNC_INFO
+//                     << data.compass.x()
+//                     << data.compass.y()
+//                     << data.compass.z();
+            mag.setX((qreal)data.compass.x());
+            mag.setY((qreal)data.compass.y());
+            mag.setZ((qreal)data.compass.z());
             emit q->magnetometerChanged(mag);
         }
 
