@@ -210,9 +210,9 @@ void QSenseHatSensorsPrivate::report(const RTIMU_DATA &data, SenseHatSensorBase:
 //                     << data.compass.x()
 //                     << data.compass.y()
 //                     << data.compass.z();
-            mag.setX((qreal)data.compass.x());
-            mag.setY((qreal)data.compass.y());
-            mag.setZ((qreal)data.compass.z());
+            mag.setX((qreal)data.compass.x() * .000001);
+            mag.setY((qreal)data.compass.y() * .000001);
+            mag.setZ((qreal)data.compass.z() * .000001);
             emit q->magnetometerChanged(mag);
         }
 
