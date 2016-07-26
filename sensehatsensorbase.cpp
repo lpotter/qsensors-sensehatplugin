@@ -1,6 +1,7 @@
 #include "sensehatsensorbase.h"
 #include "qsensors-sensehatpluginprivate_p.h"
 
+#include <QFile>
 #include <QStandardPaths>
 #include <QSensorBackend>
 
