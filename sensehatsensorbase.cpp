@@ -182,10 +182,10 @@ void QSenseHatSensorsPrivate::report(const RTIMU_DATA &data, SenseHatSensorBase:
     if (what.testFlag(SenseHatSensorBase::Rotation)) {
         if (data.fusionPoseValid) {
             rotation.setTimestamp((quint64)data.timestamp);
-            qDebug() << Q_FUNC_INFO
-                     << data.fusionPose.x()
-                     << data.fusionPose.y()
-                     << data.fusionPose.z();
+//            qDebug() << Q_FUNC_INFO
+//                     << data.fusionPose.x()
+//                     << data.fusionPose.y()
+//                     << data.fusionPose.z();
             rotation.setFromEuler(toDeg360(data.fusionPose.x()),
                                    toDeg360(data.fusionPose.y()),
                                    toDeg360(data.fusionPose.z()));
