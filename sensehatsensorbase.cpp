@@ -38,7 +38,7 @@ void QSenseHatSensorsPrivate::open()
  //   CLocale c; // to avoid decimal separator trouble in the ini file
 
     QString sensehatConfigDir = QFile::decodeName(qgetenv("SENSEHAT_CONFIG_DIR"));
-    if (!sensehatConfigDir.isEmpty())
+    if (sensehatConfigDir.isEmpty())
         sensehatConfigDir = QString::fromLatin1("/etc/xdg");
 
     settings = new RTIMUSettings(sensehatConfigDir.toLocal8Bit(), "RTIMULib");
