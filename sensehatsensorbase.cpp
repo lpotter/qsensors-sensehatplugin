@@ -1,3 +1,19 @@
+// Copyright (C) 2015, 2016 Canonical Ltd
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License version 3 as
+// published by the Free Software Foundation.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+// Inspired by qtsensehat module
+
 #include "sensehatsensorbase.h"
 #include "qsensors-sensehatpluginprivate_p.h"
 
@@ -36,8 +52,6 @@ void QSenseHatSensorsPrivate::open()
 {
     qDebug() << Q_FUNC_INFO;
 
- //   CLocale c; // to avoid decimal separator trouble in the ini file
-
     QString sensehatConfigDir = QFile::decodeName(qgetenv("SENSEHAT_CONFIG_DIR"));
     if (sensehatConfigDir.isEmpty())
         sensehatConfigDir = QString::fromLatin1("/etc/xdg");
@@ -52,13 +66,11 @@ void QSenseHatSensorsPrivate::open()
     qDebug() << "Humidity sensor name" << rthumidity->humidityName();
 
     rtpressure = RTPressure::createPressure(settings);
-   qDebug() <<  "Pressure sensor name" << rtpressure->pressureName();
+    qDebug() <<  "Pressure sensor name" << rtpressure->pressureName();
 }
 
 void QSenseHatSensorsPrivate::update(SenseHatSensorBase::UpdateFlags what)
 {
-//    qDebug() << Q_FUNC_INFO << what;
-
     int humFlags = SenseHatSensorBase::Humidity;
     if (temperatureFromHumidity)
         humFlags |= SenseHatSensorBase::Temperature;
@@ -153,10 +165,6 @@ void QSenseHatSensorsPrivate::report(const RTIMU_DATA &data, SenseHatSensorBase:
 
     if (what.testFlag(SenseHatSensorBase::Gyro)) {
         if (data.gyroValid) {
-//            qDebug() << Q_FUNC_INFO
-//                     << data.gyro.x()
-//                     << data.gyro.y()
-//                     << data.gyro.z();
             gyro.setTimestamp((quint64)data.timestamp);
             gyro.setX((qreal)data.gyro.x() * RADIANS_TO_DEGREES);
             gyro.setY((qreal)data.gyro.y() * RADIANS_TO_DEGREES);
@@ -169,10 +177,6 @@ void QSenseHatSensorsPrivate::report(const RTIMU_DATA &data, SenseHatSensorBase:
     if (what.testFlag(SenseHatSensorBase::Acceleration)) {
         if (data.accelValid) {
             acceleration.setTimestamp((quint64)data.timestamp);
-//            qDebug() << Q_FUNC_INFO
-//                     << data.accel.x()
-//                     << data.accel.y()
-//                     << data.accel.z();
             acceleration.setX((qreal)data.accel.x() * STANDARD_GRAVITY);
             acceleration.setY((qreal)data.accel.y() * STANDARD_GRAVITY);
             acceleration.setZ((qreal)data.accel.z() * STANDARD_GRAVITY);
@@ -182,10 +186,6 @@ void QSenseHatSensorsPrivate::report(const RTIMU_DATA &data, SenseHatSensorBase:
     if (what.testFlag(SenseHatSensorBase::Rotation)) {
         if (data.fusionPoseValid) {
             rotation.setTimestamp((quint64)data.timestamp);
-//            qDebug() << Q_FUNC_INFO
-//                     << data.fusionPose.x()
-//                     << data.fusionPose.y()
-//                     << data.fusionPose.z();
             rotation.setFromEuler(toDeg360(data.fusionPose.x()),
                                    toDeg360(data.fusionPose.y()),
                                    toDeg360(data.fusionPose.z()));
@@ -199,17 +199,12 @@ void QSenseHatSensorsPrivate::report(const RTIMU_DATA &data, SenseHatSensorBase:
             compass.setTimestamp((quint64)data.timestamp);
             compass.setAzimuth(toDeg360(data.fusionPose.z()));
                     emit q->compassChanged(compass);
-            qDebug() << Q_FUNC_INFO << compass.azimuth();
         }
     }
 
     if (what.testFlag(SenseHatSensorBase::Magnetometer)) {
         if (data.compassValid) {
             mag.setTimestamp((qreal)data.timestamp);
-//            qDebug() << Q_FUNC_INFO
-//                     << data.compass.x()
-//                     << data.compass.y()
-//                     << data.compass.z();
             mag.setX((qreal)data.compass.x() * .000001);
             mag.setY((qreal)data.compass.y() * .000001);
             mag.setZ((qreal)data.compass.z() * .000001);
@@ -252,6 +247,5 @@ bool SenseHatSensorBase::isFeatureSupported(QSensor::Feature /*feature*/) const
 
 void SenseHatSensorBase::poll(SenseHatSensorBase::UpdateFlags sensorFlag)
 {
-    //Q_D(QSenseHatSensors);
     d_ptr->update(sensorFlag);
 }
