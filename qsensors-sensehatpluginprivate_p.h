@@ -43,7 +43,6 @@ public:
     QTimer pollTimer;
     bool temperatureFromHumidity;
 
-
     qreal humidity = 0;
     QPressureReading pressure;
     QAmbientTemperatureReading temperature;
@@ -55,7 +54,7 @@ public:
     QRotationReading rotation;
     QAmbientTemperatureReading temp;
 
-    void open();
+    bool open();
     void update(SenseHatSensorBase::UpdateFlags what);
     void report(const RTIMU_DATA &data, SenseHatSensorBase::UpdateFlags what);
 

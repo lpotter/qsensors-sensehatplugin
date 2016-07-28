@@ -48,7 +48,7 @@ QSenseHatSensorsPrivate::~QSenseHatSensorsPrivate()
     delete settings;
 }
 
-void QSenseHatSensorsPrivate::open()
+bool QSenseHatSensorsPrivate::open()
 {
     qDebug() << Q_FUNC_INFO;
 
@@ -59,6 +59,10 @@ void QSenseHatSensorsPrivate::open()
     settings = new RTIMUSettings(sensehatConfigDir.toLocal8Bit(), "RTIMULib");
 
     rtimu = RTIMU::createIMU(settings);
+    if ((rtimu == NULL) || (rtimu->IMUType() == RTIMU_TYPE_NULL)) {
+        qDebug() << "No IMU found";
+        return false;
+    }
     pollInterval = qMax(1, rtimu->IMUGetPollInterval());
     qDebug() << "IMU name" <<   rtimu->IMUName() << "Recommended poll interval" << pollInterval << "ms";
 
@@ -67,6 +71,14 @@ void QSenseHatSensorsPrivate::open()
 
     rtpressure = RTPressure::createPressure(settings);
     qDebug() <<  "Pressure sensor name" << rtpressure->pressureName();
+
+    if (!imuInited) {
+        if (!rtimu->IMUInit())
+            qWarning("Failed to initialize IMU");
+        else
+            imuInited = true;
+    }
+    return imuInited;
 }
 
 void QSenseHatSensorsPrivate::update(SenseHatSensorBase::UpdateFlags what)
@@ -107,11 +119,7 @@ void QSenseHatSensorsPrivate::update(SenseHatSensorBase::UpdateFlags what)
             | SenseHatSensorBase::Compass | SenseHatSensorBase::Orientation
             | SenseHatSensorBase::Magnetometer | SenseHatSensorBase::Rotation;
     if (what & imuFlags) {
-        if (!imuInited) {
-            imuInited = true;
-            if (!rtimu->IMUInit())
-                qWarning("Failed to initialize IMU");
-        }
+
         int attempts = MAX_READ_ATTEMPTS;
         while (attempts--) {
             if (rtimu->IMURead())
@@ -219,9 +227,10 @@ SenseHatSensorBase::SenseHatSensorBase(QSensor *sensor)
       d_ptr(new QSenseHatSensorsPrivate(this))
 {
     qDebug() << Q_FUNC_INFO;
-    d_ptr->open();
-    d_ptr->pollTimer.setInterval(d_ptr->pollInterval);
-    connect(&d_ptr->pollTimer, &QTimer::timeout, [this] { d_ptr->update(sensorFlag); });
+    if (d_ptr->open()) {
+        d_ptr->pollTimer.setInterval(d_ptr->pollInterval);
+        connect(&d_ptr->pollTimer, &QTimer::timeout, [this] { d_ptr->update(sensorFlag); });
+    }
 }
 
 SenseHatSensorBase::~SenseHatSensorBase()
@@ -231,13 +240,15 @@ SenseHatSensorBase::~SenseHatSensorBase()
 void SenseHatSensorBase::start()
 {
     qDebug() << Q_FUNC_INFO;
-    d_ptr->pollTimer.start();
+    if (d_ptr->imuInited)
+        d_ptr->pollTimer.start();
 }
 
 void SenseHatSensorBase::stop()
 {
     qDebug() << Q_FUNC_INFO;
-    d_ptr->pollTimer.stop();
+    if (d_ptr->imuInited)
+        d_ptr->pollTimer.stop();
 }
 
 bool SenseHatSensorBase::isFeatureSupported(QSensor::Feature /*feature*/) const
