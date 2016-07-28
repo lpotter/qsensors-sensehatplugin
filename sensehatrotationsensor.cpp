@@ -16,7 +16,7 @@
 #include "sensehatsensorbase.h"
 #include <QDebug>
 
-char const * const SenseHatMagnetometer::id("sensehat.rotation");
+char const * const SenseHatRotationSensor::id("sensehat.rotation");
 
 SenseHatRotationSensor::SenseHatRotationSensor(QSensor *sensor)
     : SenseHatSensorBase(sensor)
@@ -30,9 +30,7 @@ SenseHatRotationSensor::SenseHatRotationSensor(QSensor *sensor)
 
 void SenseHatRotationSensor::rotationChanged(const QRotationReading &value)
 {
-    m_reading.setX(value.x());
-    m_reading.setY(value.y());
-    m_reading.setZ(value.z());
+    m_reading.setFromEuler(value.x(),value.y(),value.z());
     m_reading.setTimestamp(value.timestamp());
     newReadingAvailable();
 }
