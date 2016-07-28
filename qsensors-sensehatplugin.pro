@@ -16,7 +16,8 @@ SOURCES += main.cpp \
     sensehatgyroscope.cpp \
     sensehatpressuresensor.cpp \
     sensehattemperaturesensor.cpp \
-    sensehatmagnetometer.cpp
+    sensehatmagnetometer.cpp \
+    sensehatrotationsensor.cpp
 
 HEADERS += \
     sensehatsensorbase.h \
@@ -26,7 +27,8 @@ HEADERS += \
     sensehatgyroscope.h \
     sensehatpressuresensor.h \
     sensehattemperaturesensor.h \
-    sensehatmagnetometer.h
+    sensehatmagnetometer.h \
+    sensehatrotationsensor.h
 
 PLUGIN_TYPE = sensors
 
