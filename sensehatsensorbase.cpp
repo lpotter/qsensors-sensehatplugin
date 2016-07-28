@@ -67,11 +67,17 @@ bool QSenseHatSensorsPrivate::open()
     qDebug() << "IMU name" <<   rtimu->IMUName() << "Recommended poll interval" << pollInterval << "ms";
 
     rthumidity = RTHumidity::createHumidity(settings);
-    qDebug() << "Humidity sensor name" << rthumidity->humidityName();
-
+    if (rthumidity == NULL) {
+        qDebug() << "Failed to create Humidity";
+    } else {
+        qDebug() << "Humidity sensor name" << rthumidity->humidityName();
+    }
     rtpressure = RTPressure::createPressure(settings);
-    qDebug() <<  "Pressure sensor name" << rtpressure->pressureName();
-
+    if (rtpressure == NULL) {
+        qDebug() << "Failed to create Pressure";
+    } else {
+        qDebug() <<  "Pressure sensor name" << rtpressure->pressureName();
+    }
     if (!imuInited) {
         if (!rtimu->IMUInit())
             qWarning("Failed to initialize IMU");
