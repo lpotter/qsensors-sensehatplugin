@@ -23,6 +23,8 @@
 
 #include <RTIMULib.h>
 #include <unistd.h>
+#include <errno.h>
+
 #define RADIANS_TO_DEGREES 57.2957795
 #define STANDARD_GRAVITY 9.80665
 #define RADIANS_TO_DEGREES 57.2957795
@@ -248,6 +250,10 @@ void SenseHatSensorBase::start()
     qDebug() << Q_FUNC_INFO;
     if (d_ptr->imuInited)
         d_ptr->pollTimer.start();
+    else {
+        sensorError(-ENODEV);
+        stop();
+    }
 }
 
 void SenseHatSensorBase::stop()
@@ -255,6 +261,7 @@ void SenseHatSensorBase::stop()
     qDebug() << Q_FUNC_INFO;
     if (d_ptr->imuInited)
         d_ptr->pollTimer.stop();
+    sensorStopped();
 }
 
 bool SenseHatSensorBase::isFeatureSupported(QSensor::Feature /*feature*/) const
