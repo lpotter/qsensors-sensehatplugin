@@ -65,6 +65,12 @@ bool QSenseHatSensorsPrivate::open()
         qDebug() << "No IMU found";
         return false;
     }
+    rtimu->setGyroEnable(true);
+    rtimu->setAccelEnable(true);
+    rtimu->setCompassEnable(true);
+
+    rtimu->setDebugEnable(true);
+
     pollInterval = qMax(1, rtimu->IMUGetPollInterval());
     qDebug() << "IMU name" <<   rtimu->IMUName() << "Recommended poll interval" << pollInterval << "ms";
 
@@ -145,7 +151,9 @@ void QSenseHatSensorsPrivate::update(SenseHatSensorBase::UpdateFlags what)
 static inline qreal toDeg360(qreal rad)
 {
     const qreal deg = rad * RADIANS_TO_DEGREES;
-    return deg < 0 ? deg + 360 : deg;
+    qreal result = deg < 0 ? deg + 360 : deg;
+    qWarning() << Q_FUNC_INFO << deg << result;
+    return result;
 }
 
 void QSenseHatSensorsPrivate::report(const RTIMU_DATA &data, SenseHatSensorBase::UpdateFlags what)
@@ -212,6 +220,8 @@ void QSenseHatSensorsPrivate::report(const RTIMU_DATA &data, SenseHatSensorBase:
     // sensorfusion algo
     if (what.testFlag(SenseHatSensorBase::Compass)) {
         if (data.fusionPoseValid) {
+            qWarning() << rtimu->getMeasuredPose().z();
+
             compass.setTimestamp((quint64)data.timestamp);
             compass.setAzimuth(toDeg360(data.fusionPose.z()));
                     emit q->compassChanged(compass);

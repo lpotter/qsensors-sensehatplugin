@@ -43,6 +43,7 @@
 #include "sensehatpressuresensor.h"
 #include "sensehattemperaturesensor.h"
 #include "sensehatmagnetometer.h"
+#include "sensehatrotationsensor.h"
 
 #include <qsensorplugin.h>
 #include <qsensorbackend.h>
@@ -78,6 +79,9 @@ public:
         if (!QSensorManager::isBackendRegistered(QMagnetometer::type, SenseHatMagnetometer::id))
             QSensorManager::registerBackend(QMagnetometer::type, SenseHatMagnetometer::id, this);
 
+        if (!QSensorManager::isBackendRegistered(QRotationSensor::type, SenseHatRotationSensor::id))
+            QSensorManager::registerBackend(QRotationSensor::type, SenseHatRotationSensor::id, this);
+
     }
 
     QSensorBackend *createBackend(QSensor *sensor)
@@ -100,6 +104,9 @@ public:
 
         if (sensor->identifier() == SenseHatMagnetometer::id)
             return new SenseHatMagnetometer(sensor);
+
+        if (sensor->identifier() == SenseHatRotationSensor::id)
+            return new SenseHatRotationSensor(sensor);
 
         return Q_NULLPTR;
     }
