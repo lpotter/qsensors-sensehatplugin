@@ -69,7 +69,7 @@ bool QSenseHatSensorsPrivate::open()
     rtimu->setAccelEnable(true);
     rtimu->setCompassEnable(true);
 
-    rtimu->setDebugEnable(true);
+//    rtimu->setDebugEnable(true);
 
     pollInterval = qMax(1, rtimu->IMUGetPollInterval());
     qDebug() << "IMU name" <<   rtimu->IMUName() << "Recommended poll interval" << pollInterval << "ms";
@@ -220,7 +220,7 @@ void QSenseHatSensorsPrivate::report(const RTIMU_DATA &data, SenseHatSensorBase:
     // sensorfusion algo
     if (what.testFlag(SenseHatSensorBase::Compass)) {
         if (data.fusionPoseValid) {
-            qWarning() << rtimu->getMeasuredPose().z();
+            qWarning() << Q_FUNC_INFO << toDeg360(rtimu->getMeasuredPose().z());
 
             compass.setTimestamp((quint64)data.timestamp);
             compass.setAzimuth(toDeg360(data.fusionPose.z()));
