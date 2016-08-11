@@ -220,7 +220,13 @@ void QSenseHatSensorsPrivate::report(const RTIMU_DATA &data, SenseHatSensorBase:
     // sensorfusion algo
     if (what.testFlag(SenseHatSensorBase::Compass)) {
         if (data.fusionPoseValid) {
-            qWarning() << Q_FUNC_INFO << toDeg360(rtimu->getMeasuredPose().z());
+            qWarning() << "XXXX";
+            qWarning() << Q_FUNC_INFO <<"measured"<< toDeg360(rtimu->getMeasuredPose().x());
+            qWarning() << Q_FUNC_INFO <<"measured"<< toDeg360(rtimu->getMeasuredPose().y());
+            qWarning() << Q_FUNC_INFO <<"measured"<< toDeg360(rtimu->getMeasuredPose().z());
+            qWarning() << Q_FUNC_INFO <<"fusion"<< toDeg360(data.fusionPose.x());
+            qWarning() << Q_FUNC_INFO <<"fusion"<<  toDeg360(data.fusionPose.y());
+            qWarning() << Q_FUNC_INFO <<"fusion"<<  toDeg360(data.fusionPose.z());
 
             compass.setTimestamp((quint64)data.timestamp);
             compass.setAzimuth(toDeg360(data.fusionPose.z()));
