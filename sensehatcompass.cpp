@@ -21,7 +21,6 @@ char const * const SenseHatCompass::id("sensehat.compass");
 
 SenseHatCompass::SenseHatCompass(QSensor *sensor)
     : SenseHatSensorBase(sensor)
-
 {
     sensorFlag = SenseHatSensorBase::Compass;
     setReading<QCompassReading>(&m_reading);

@@ -152,7 +152,6 @@ static inline qreal toDeg360(qreal rad)
 {
     const qreal deg = rad * RADIANS_TO_DEGREES;
     qreal result = deg < 0 ? deg + 360 : deg;
-    qWarning() << Q_FUNC_INFO << deg << result;
     return result;
 }
 
