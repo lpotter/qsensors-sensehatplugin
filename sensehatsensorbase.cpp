@@ -223,7 +223,7 @@ void QSenseHatSensorsPrivate::report(const RTIMU_DATA &data, SenseHatSensorBase:
             qWarning() << rtimu->getMeasuredPose().z();
 
             compass.setTimestamp((quint64)data.timestamp);
-            compass.setAzimuth(toDeg360(data.fusionPose.z()));
+            compass.setAzimuth(toDeg360(data.fusionPose.y()));
                     emit q->compassChanged(compass);
         }
     }
