@@ -1,7 +1,7 @@
 TEMPLATE = lib
 TARGET = $$qtLibraryTarget(qtsensors_sensehat)
 QT = core sensors
-CONFIG += plugin debug
+CONFIG += plugin release 
 
 OTHER_FILES = plugin.json \
     Sensors.conf
