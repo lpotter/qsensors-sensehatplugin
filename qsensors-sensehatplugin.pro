@@ -1,13 +1,7 @@
-TEMPLATE = lib
-TARGET = $$qtLibraryTarget(qtsensors_sensehat)
-QT = core sensors
-CONFIG += plugin release 
+TARGET = qtsensors_sensehat
+QT = core sensors-private
 
-OTHER_FILES = plugin.json \
-    Sensors.conf
 CONFIG += c++11
-
-LIBS += -lRTIMULib
 
 SOURCES += main.cpp \
     sensehatsensorbase.cpp \
@@ -17,7 +11,8 @@ SOURCES += main.cpp \
     sensehatpressuresensor.cpp \
     sensehattemperaturesensor.cpp \
     sensehatmagnetometer.cpp \
-    sensehatrotationsensor.cpp
+    sensehatrotationsensor.cpp \
+    sensehathumiditysensor.cpp
 
 HEADERS += \
     sensehatsensorbase.h \
@@ -28,16 +23,18 @@ HEADERS += \
     sensehatpressuresensor.h \
     sensehattemperaturesensor.h \
     sensehatmagnetometer.h \
-    sensehatrotationsensor.h
+    sensehatrotationsensor.h \
+    sensehathumiditysensor.h
+
+OTHER_FILES = plugin.json \
+    Sensors.conf
+
+LIBS += -lRTIMULib
+
+CONFIGFILES.files = Sensors.conf
+CONFIGFILES.path = /etc/xdg/QtProject/
+INSTALLS += CONFIGFILES
 
 PLUGIN_TYPE = sensors
-
-DESTDIR = $$PLUGIN_TYPE
-
-
-target.path = $$[QT_INSTALL_PLUGINS]/$$PLUGIN_TYPE
-INSTALLS += target
-
-config.path=/etc/xdg/QtProject
-config.files= Sensors.conf
-INSTALLS += config
+PLUGIN_CLASS_NAME = sensehatSensorPlugin
+load(qt_plugin)

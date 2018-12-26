@@ -4,37 +4,39 @@
 ** Copyright (C) 2016 Canonical Ltd
 ** Contact: http://www.qt.io/licensing/
 **
+** This file is part of the QtSensors module of the Qt Toolkit.
 **
-** $QT_BEGIN_LICENSE:LGPL3$
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial License Usage
 ** Licensees holding valid commercial Qt licenses may use this file in
 ** accordance with the commercial license agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and The Qt Company. For licensing terms
-** and conditions see http://www.qt.io/terms-conditions. For further
-** information use the contact form at http://www.qt.io/contact-us.
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
 **
 ** GNU Lesser General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU Lesser
 ** General Public License version 3 as published by the Free Software
-** Foundation and appearing in the file LICENSE.LGPLv3 included in the
+** Foundation and appearing in the file LICENSE.LGPL3 included in the
 ** packaging of this file. Please review the following information to
 ** ensure the GNU Lesser General Public License version 3 requirements
-** will be met: https://www.gnu.org/licenses/lgpl.html.
+** will be met: https://www.gnu.org/licenses/lgpl-3.0.html.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License version 2.0 or later as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file. Please review the following information to
-** ensure the GNU General Public License version 2.0 requirements will be
-** met: http://www.gnu.org/licenses/gpl-2.0.html.
+** General Public License version 2.0 or (at your option) the GNU General
+** Public license version 3 or any later version approved by the KDE Free
+** Qt Foundation. The licenses are as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL2 and LICENSE.GPL3
+** included in the packaging of this file. Please review the following
+** information to ensure the GNU General Public License requirements will
+** be met: https://www.gnu.org/licenses/gpl-2.0.html and
+** https://www.gnu.org/licenses/gpl-3.0.html.
 **
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-
-// parts from qsensehat module
 
 #ifndef QSENSORSSENSEHATPLUGINPRIVATE_P_H
 #define QSENSORSSENSEHATPLUGINPRIVATE_P_H
@@ -47,6 +49,7 @@
 #include <QMagnetometerReading>
 #include <QRotationReading>
 #include <QAmbientTemperatureReading>
+#include <QHumidityReading>
 
 class QSenseHatSensorsPrivate
 {
@@ -55,19 +58,19 @@ public:
     ~QSenseHatSensorsPrivate();
     SenseHatSensorBase *q;
 
-    RTIMUSettings *settings = Q_NULLPTR;
-    RTIMU *rtimu = Q_NULLPTR;
-    RTHumidity *rthumidity = Q_NULLPTR;
-    RTPressure *rtpressure = Q_NULLPTR;
+    RTIMUSettings *settings = nullptr;
+    RTIMU *rtimu = nullptr;
+    RTHumidity *rthumidity = nullptr;
+    RTPressure *rtpressure = nullptr;
 
-    bool imuInited;
-    int pollInterval;
-    bool humidityInited;
-    bool pressureInited;
+    bool imuInited = false;
+    int pollInterval = 0;
+    bool humidityInited = false;
+    bool pressureInited = false;
     QTimer pollTimer;
-    bool temperatureFromHumidity;
+    bool temperatureFromHumidity =  true;
 
-    qreal humidity = 0;
+    qreal m_humidity = 0;
     QPressureReading pressure;
     QAmbientTemperatureReading temperature;
     QGyroscopeReading gyro;
@@ -77,14 +80,13 @@ public:
     QMagnetometerReading mag;
     QRotationReading rotation;
     QAmbientTemperatureReading temp;
+    QHumidityReading humidity;
 
     bool open();
     void update(SenseHatSensorBase::UpdateFlags what);
     void report(const RTIMU_DATA &data, SenseHatSensorBase::UpdateFlags what);
-
+    quint64 getTimestamp();
 };
-
-
 
 #endif // QSENSORSSENSEHATPLUGINPRIVATE_P_H
 

@@ -4,37 +4,39 @@
 ** Copyright (C) 2016 Canonical Ltd
 ** Contact: http://www.qt.io/licensing/
 **
+** This file is part of the QtSensors module of the Qt Toolkit.
 **
-** $QT_BEGIN_LICENSE:LGPL3$
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial License Usage
 ** Licensees holding valid commercial Qt licenses may use this file in
 ** accordance with the commercial license agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and The Qt Company. For licensing terms
-** and conditions see http://www.qt.io/terms-conditions. For further
-** information use the contact form at http://www.qt.io/contact-us.
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
 **
 ** GNU Lesser General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU Lesser
 ** General Public License version 3 as published by the Free Software
-** Foundation and appearing in the file LICENSE.LGPLv3 included in the
+** Foundation and appearing in the file LICENSE.LGPL3 included in the
 ** packaging of this file. Please review the following information to
 ** ensure the GNU Lesser General Public License version 3 requirements
-** will be met: https://www.gnu.org/licenses/lgpl.html.
+** will be met: https://www.gnu.org/licenses/lgpl-3.0.html.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License version 2.0 or later as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file. Please review the following information to
-** ensure the GNU General Public License version 2.0 requirements will be
-** met: http://www.gnu.org/licenses/gpl-2.0.html.
+** General Public License version 2.0 or (at your option) the GNU General
+** Public license version 3 or any later version approved by the KDE Free
+** Qt Foundation. The licenses are as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL2 and LICENSE.GPL3
+** included in the packaging of this file. Please review the following
+** information to ensure the GNU General Public License requirements will
+** be met: https://www.gnu.org/licenses/gpl-2.0.html and
+** https://www.gnu.org/licenses/gpl-3.0.html.
 **
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-
-// parts from qsensehat module
 
 #include "sensehatsensorbase.h"
 #include "qsensors-sensehatpluginprivate_p.h"
@@ -42,6 +44,7 @@
 #include <QFile>
 #include <QStandardPaths>
 #include <QSensorBackend>
+#include <QDeadlineTimer>
 
 #include <RTIMULib.h>
 #include <unistd.h>
@@ -51,17 +54,9 @@
 #define STANDARD_GRAVITY 9.80665
 #define RADIANS_TO_DEGREES 57.2957795
 
-static const int MAX_READ_ATTEMPTS = 5;
-//Q_LOGGING_CATEGORY(qSenseHat, "sensor.sensehat")
-
 QSenseHatSensorsPrivate::QSenseHatSensorsPrivate(SenseHatSensorBase *q_ptr)
-    : q(q_ptr),
-      imuInited(false),
-      humidityInited(false),
-      pressureInited(false),
-      temperatureFromHumidity(true)
+    : q(q_ptr)
 {
-
 }
 
 QSenseHatSensorsPrivate::~QSenseHatSensorsPrivate()
@@ -74,8 +69,6 @@ QSenseHatSensorsPrivate::~QSenseHatSensorsPrivate()
 
 bool QSenseHatSensorsPrivate::open()
 {
-    qDebug() << Q_FUNC_INFO;
-
     QString sensehatConfigDir = QFile::decodeName(qgetenv("SENSEHAT_CONFIG_DIR"));
     if (sensehatConfigDir.isEmpty())
         sensehatConfigDir = QString::fromLatin1("/etc/xdg");
@@ -84,29 +77,22 @@ bool QSenseHatSensorsPrivate::open()
 
     rtimu = RTIMU::createIMU(settings);
     if ((rtimu == NULL) || (rtimu->IMUType() == RTIMU_TYPE_NULL)) {
-        qDebug() << "No IMU found";
+        qWarning() << "No IMU found";
         return false;
     }
     rtimu->setGyroEnable(true);
     rtimu->setAccelEnable(true);
     rtimu->setCompassEnable(true);
 
-//    rtimu->setDebugEnable(true);
-
     pollInterval = qMax(1, rtimu->IMUGetPollInterval());
-    qDebug() << "IMU name" <<   rtimu->IMUName() << "Recommended poll interval" << pollInterval << "ms";
 
     rthumidity = RTHumidity::createHumidity(settings);
     if (rthumidity == NULL) {
-        qDebug() << "Failed to create Humidity";
-    } else {
-        qDebug() << "Humidity sensor name" << rthumidity->humidityName();
+        qWarning() << "Failed to create Humidity";
     }
     rtpressure = RTPressure::createPressure(settings);
     if (rtpressure == NULL) {
-        qDebug() << "Failed to create Pressure";
-    } else {
-        qDebug() <<  "Pressure sensor name" << rtpressure->pressureName();
+        qWarning() << "Failed to create Pressure";
     }
     if (!imuInited) {
         if (!rtimu->IMUInit())
@@ -154,20 +140,11 @@ void QSenseHatSensorsPrivate::update(SenseHatSensorBase::UpdateFlags what)
     const int imuFlags = SenseHatSensorBase::Gyro | SenseHatSensorBase::Acceleration
             | SenseHatSensorBase::Compass | SenseHatSensorBase::Orientation
             | SenseHatSensorBase::Magnetometer | SenseHatSensorBase::Rotation;
+
     if (what & imuFlags) {
-
-        int attempts = MAX_READ_ATTEMPTS;
-        while (attempts--) {
-            if (rtimu->IMURead())
-                break;
-            usleep(pollInterval * 1000);
-        }
-        if (attempts >= 0)
+        if (rtimu->IMURead())
             report(rtimu->getIMUData(), what & imuFlags);
-        else
-            qWarning("Failed to read intertial measurement data");
     }
-
 }
 
 static inline qreal toDeg360(qreal rad)
@@ -179,36 +156,35 @@ static inline qreal toDeg360(qreal rad)
 
 void QSenseHatSensorsPrivate::report(const RTIMU_DATA &data, SenseHatSensorBase::UpdateFlags what)
 {
-    //qDebug() << Q_FUNC_INFO << what;
-
-//    if (what.testFlag(SenseHatSensorBase::Humidity)) {
-//        if (data.humidityValid) {
-//            humidity = data.humidity;
-//            emit q->humidityChanged(humidity);
-//        }
-//    }
-
-    if (what.testFlag(SenseHatSensorBase::Pressure)) {
+    switch (what) {
+    case SenseHatSensorBase::Humidity:
+        if (data.humidityValid) {
+            if (humidity.relativeHumidity() != data.humidity) {
+                humidity.setTimestamp(getTimestamp());
+                humidity.setRelativeHumidity(data.humidity);
+                emit q->humidityChanged(humidity);
+            }
+        }
+        break;
+    case SenseHatSensorBase::Pressure:
         if (data.pressureValid) {
             if (pressure.pressure() != (qreal)data.pressure) {
-                pressure.setTimestamp((quint64)data.timestamp);
+                pressure.setTimestamp(getTimestamp());
                 pressure.setPressure((qreal)data.pressure);
                 emit q->pressureChanged(pressure);
             }
         }
-    }
-
-    if (what.testFlag(SenseHatSensorBase::Temperature)) {
+        break;
+    case SenseHatSensorBase::Temperature:
         if (data.temperatureValid) {
             if (temperature.temperature() != (qreal)data.temperature) {
                 temperature.setTemperature((qreal)data.temperature);
-                temperature.setTimestamp((quint64)data.timestamp);
+                temperature.setTimestamp(getTimestamp());
                 emit q->temperatureChanged(temperature);
             }
         }
-    }
-
-    if (what.testFlag(SenseHatSensorBase::Gyro)) {
+        break;
+    case SenseHatSensorBase::Gyro:
         if (data.gyroValid) {
             gyro.setTimestamp((quint64)data.timestamp);
             gyro.setX((qreal)data.gyro.x() * RADIANS_TO_DEGREES);
@@ -217,9 +193,8 @@ void QSenseHatSensorsPrivate::report(const RTIMU_DATA &data, SenseHatSensorBase:
 
             emit q->gyroChanged(gyro);
         }
-    }
-
-    if (what.testFlag(SenseHatSensorBase::Acceleration)) {
+        break;
+    case SenseHatSensorBase::Acceleration:
         if (data.accelValid) {
             acceleration.setTimestamp((quint64)data.timestamp);
             acceleration.setX((qreal)data.accel.x() * STANDARD_GRAVITY);
@@ -227,27 +202,26 @@ void QSenseHatSensorsPrivate::report(const RTIMU_DATA &data, SenseHatSensorBase:
             acceleration.setZ((qreal)data.accel.z() * STANDARD_GRAVITY);
             emit q->accelerationChanged(acceleration);
         }
-    }
-    if (what.testFlag(SenseHatSensorBase::Rotation)) {
+        break;
+    case SenseHatSensorBase::Rotation:
         if (data.fusionPoseValid) {
             rotation.setTimestamp((quint64)data.timestamp);
             rotation.setFromEuler(toDeg360(data.fusionPose.x()),
-                                   toDeg360(data.fusionPose.y()),
-                                   toDeg360(data.fusionPose.z()));
+                                  toDeg360(data.fusionPose.y()),
+                                  toDeg360(data.fusionPose.z()));
             emit q->rotationChanged(rotation);
         }
-    }
+        break;
     // in rtimulib compass is magnetometer and azimuth comes from
     // sensorfusion algo
-    if (what.testFlag(SenseHatSensorBase::Compass)) {
+    case SenseHatSensorBase::Compass:
         if (data.fusionPoseValid) {
             compass.setTimestamp((quint64)data.timestamp);
             compass.setAzimuth(toDeg360(data.fusionPose.z()));
                     emit q->compassChanged(compass);
         }
-    }
-
-    if (what.testFlag(SenseHatSensorBase::Magnetometer)) {
+        break;
+    case SenseHatSensorBase::Magnetometer:
         if (data.compassValid) {
             mag.setTimestamp((qreal)data.timestamp);
             mag.setX((qreal)data.compass.x() * .000001);
@@ -255,18 +229,23 @@ void QSenseHatSensorsPrivate::report(const RTIMU_DATA &data, SenseHatSensorBase:
             mag.setZ((qreal)data.compass.z() * .000001);
             emit q->magnetometerChanged(mag);
         }
+        break;
+    };
+}
 
-    }
+quint64 QSenseHatSensorsPrivate::getTimestamp()
+{
+    return QDeadlineTimer::current().deadlineNSecs() / 1000;
 }
 
 SenseHatSensorBase::SenseHatSensorBase(QSensor *sensor)
     : QSensorBackend(sensor),
       d_ptr(new QSenseHatSensorsPrivate(this))
 {
-    qDebug() << Q_FUNC_INFO;
     if (d_ptr->open()) {
         d_ptr->pollTimer.setInterval(d_ptr->pollInterval);
-        connect(&d_ptr->pollTimer, &QTimer::timeout, [this] { d_ptr->update(sensorFlag); });
+        connect(&d_ptr->pollTimer, &QTimer::timeout,
+                [this] { d_ptr->update(sensorFlag); });
     }
 }
 
@@ -276,7 +255,6 @@ SenseHatSensorBase::~SenseHatSensorBase()
 
 void SenseHatSensorBase::start()
 {
-    qDebug() << Q_FUNC_INFO;
     if (d_ptr->imuInited)
         d_ptr->pollTimer.start();
     else {
@@ -287,13 +265,12 @@ void SenseHatSensorBase::start()
 
 void SenseHatSensorBase::stop()
 {
-    qDebug() << Q_FUNC_INFO;
     if (d_ptr->imuInited)
         d_ptr->pollTimer.stop();
     sensorStopped();
 }
 
-bool SenseHatSensorBase::isFeatureSupported(QSensor::Feature /*feature*/) const
+bool SenseHatSensorBase::isFeatureSupported(QSensor::Feature) const
 {
     return false;
 }
