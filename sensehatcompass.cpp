@@ -48,8 +48,8 @@ SenseHatCompass::SenseHatCompass(QSensor *sensor)
 {
     sensorFlag = SenseHatSensorBase::Compass;
     setReading<QCompassReading>(&m_reading);
-    connect(this, &SenseHatSensorBase::compassChanged,
-            &SenseHatCompass::compassChanged);
+    connect(this, SIGNAL(compassChanged(QCompassReading)),
+            this, SLOT(compassReadingChanged(QCompassReading)));
 }
 
 void SenseHatCompass::compassChanged(const QCompassReading &value)

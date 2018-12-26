@@ -47,8 +47,8 @@ SenseHatGyroscope::SenseHatGyroscope(QSensor *sensor)
 {
     sensorFlag = SenseHatSensorBase::Gyro;
     setReading<QGyroscopeReading>(&m_reading);
-    connect(this, &SenseHatSensorBase::gyroChanged,
-            &SenseHatGyroscope::gyroChanged);
+    connect(this, SIGNAL(gyroChanged(QGyroscopeReading)),
+            this,SLOT(gyroChanged(QGyroscopeReading)));
 }
 
 void SenseHatGyroscope::gyroChanged(const QGyroscopeReading &value)

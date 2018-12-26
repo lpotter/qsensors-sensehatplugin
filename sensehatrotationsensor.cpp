@@ -47,8 +47,8 @@ SenseHatRotationSensor::SenseHatRotationSensor(QSensor *sensor)
 {
     sensorFlag = SenseHatSensorBase::Rotation;
     setReading<QRotationReading>(&m_reading);
-    connect(this, &SenseHatSensorBase::rotationChanged,
-            &SenseHatRotationSensor::rotationChanged);
+    connect(this, SIGNAL(rotationChanged(QRotationReading)),
+            this, SLOT(rotationChanged(QRotationReading)));
 }
 
 void SenseHatRotationSensor::rotationChanged(const QRotationReading &value)

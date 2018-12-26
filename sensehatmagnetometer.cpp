@@ -47,8 +47,8 @@ SenseHatMagnetometer::SenseHatMagnetometer(QSensor *sensor)
 {
     sensorFlag = SenseHatSensorBase::Magnetometer;
     setReading<QMagnetometerReading>(&m_reading);
-    connect(this, &SenseHatSensorBase::magnetometerChanged,
-            &SenseHatMagnetometer::magChanged);
+    connect(this,SIGNAL(magnetometerChanged(QMagnetometerReading)),
+            this, SLOT(magChanged(QMagnetometerReading)));
 }
 
 

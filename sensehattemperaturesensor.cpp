@@ -47,8 +47,8 @@ SenseHatTemperatureSensor::SenseHatTemperatureSensor(QSensor *sensor)
 {
     sensorFlag = SenseHatSensorBase::Temperature;
     setReading<QAmbientTemperatureReading>(&m_reading);
-    connect(this, &SenseHatSensorBase::temperatureChanged,
-            &SenseHatTemperatureSensor::temperatureChanged);
+    connect(this, SIGNAL(temperatureChanged(QAmbientTemperatureReading)),
+            this, SLOT(temperatureChanged(QAmbientTemperatureReading)));
 }
 
 void SenseHatTemperatureSensor::temperatureChanged(const QAmbientTemperatureReading &value)

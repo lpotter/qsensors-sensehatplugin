@@ -44,7 +44,7 @@
 #include <QFile>
 #include <QStandardPaths>
 #include <QSensorBackend>
-#include <QDeadlineTimer>
+//#include <QDeadlineTimer>
 
 #include <RTIMULib.h>
 #include <unistd.h>
@@ -235,7 +235,14 @@ void QSenseHatSensorsPrivate::report(const RTIMU_DATA &data, SenseHatSensorBase:
 
 quint64 QSenseHatSensorsPrivate::getTimestamp()
 {
-    return QDeadlineTimer::current().deadlineNSecs() / 1000;
+    struct timespec tv;
+    int ok;
+    ok = clock_gettime(CLOCK_MONOTONIC, &tv);
+    Q_ASSERT(ok == 0);
+    Q_UNUSED(ok);
+
+    quint64 result = (tv.tv_sec * 1000000ULL) + (tv.tv_nsec * 0.001); // scale to microseconds
+    return result;
 }
 
 SenseHatSensorBase::SenseHatSensorBase(QSensor *sensor)

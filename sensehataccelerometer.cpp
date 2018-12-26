@@ -47,8 +47,8 @@ SenseHatAccelerometer::SenseHatAccelerometer(QSensor *sensor)
 {
     sensorFlag = SenseHatSensorBase::Acceleration;
     setReading<QAccelerometerReading>(&m_reading);
-    connect(this, &SenseHatSensorBase::accelerationChanged,
-            &SenseHatAccelerometer::accelChanged);
+    connect(this, SIGNAL(accelerationChanged(QAccelerometerReading)),
+            this, SLOT(accelChanged(QAccelerometerReading)));
 }
 
 void SenseHatAccelerometer::accelChanged(const QAccelerometerReading &value)

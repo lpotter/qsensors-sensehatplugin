@@ -1,7 +1,8 @@
 TARGET = qtsensors_sensehat
 QT = core sensors-private
-
+TEMPLATE=lib
 CONFIG += c++11
+
 
 SOURCES += main.cpp \
     sensehatsensorbase.cpp \
@@ -36,5 +37,4 @@ CONFIGFILES.path = /etc/xdg/QtProject/
 INSTALLS += CONFIGFILES
 
 PLUGIN_TYPE = sensors
-PLUGIN_CLASS_NAME = sensehatSensorPlugin
-load(qt_plugin)
+PLUGIN_CLASS_NAME = QSenseHatSensorPlugin
