@@ -48,7 +48,7 @@ SenseHatPressureSensor::SenseHatPressureSensor(QSensor *sensor)
     sensorFlag = SenseHatSensorBase::Pressure;
     setReading<QPressureReading>(&m_reading);
     connect(this, SIGNAL(pressureChanged(QPressureReading)),
-            this, SIGNAL(pressureChanged(QPressureReading)));
+            this, SLOT(pressureChanged(QPressureReading)));
 }
 
 void SenseHatPressureSensor::pressureChanged(const QPressureReading &value)
